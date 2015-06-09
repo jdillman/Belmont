@@ -5,104 +5,120 @@ require('BelmontResponse.class.php');
 
 class Belmont {
 
-  CONST DEFAULT_METHODS = 'GET|HEAD|POST|PUT';
+  CONST DEFAULT_METHODS = 'GET|POST|HEAD|PUT|DELETE';
+  CONST DEFAULT_ROUTE_MATCH = '[^/]+';
+  CONST DEFAULT_CONTROLLER = 'HomeController';
 
-
-  private $config = array(
+  private $_config = array(
     'debug'     => false, // Enable debug console
     'tracking'  => false, // Enable link tracking
-    'stream'    => true   // Stream HTML as we generate it
+    'stream'    => true   // Stream HTML as we generate it otherwise buffer
   );
 
-  // TODO BelmontRoute class if we feel like we need more abstractions :)
-  private $default_route = array(
-    'controller'  => 'NotFound',
-    'methods'     => self::DEFAULT_METHODS
-  );
-
-  // Valid urls to route
   private $routes = null;
 
-  public function __construct (array $routes, array $config = null) {
+  public function __construct (array $routes, array $config = array()) {
 
-    $config = array_merge($this->config, $config);
+    $config = array_merge($this->_config, $config);
 
     if ($config['debug']) {
       // TODO enable debug logging
-    }
-    if ($config['js']) {
-      // TODO Noscript
     }
     if ($config['tracking']) {
       // TODO Modify links with tracking info
     }
 
-    $this->routes = $routes;
+    $this->addRoute($routes);
+
   }
 
-  // Takes a URI and finds the appropriate handler
-  public function matchRoute ($url) {
-    
-    $route_handler = $this->default_route;
+  public function addRoute(array $routes) {
+    foreach ($routes as $key => $route) {
+      // Make sure there is always a leading '/'
+      if (substr($key, 0, 1) !== '/') {
+        $key = '/' . $key;
+      }
 
-    // TODO regex route match
-    $matched_route = isset($this->routes[$url])
-      ? $this->routes[$url]
-      : null;
-
-    // Route can be an array, string or function. Handler accordingly
-    if (is_array($matched_route)) {
-      $route_handler = array_merge($route_handler, $matched_route);
-    } else if (is_string($matched_route)) {
-      $route_handler['controller'] = $route_handler;
-    } else if (is_callable($matched_route)) {
-      $route_handler = $matched_route;
+      $this->_routes[$key] = $route;
     }
 
-    return $route_handler;
+    return true;
+  }
+
+  // Takes a URL and finds the appropriate handler
+  public function matchRoute ($request_url) {
+
+    $methods = self::DEFAULT_METHODS;
+    $controller =  self::DEFAULT_CONTROLLER;
+    
+    foreach ($this->_routes as $route_url => $route) {
+      $route_url = str_replace('/', '\/', $route_url);
+      if (!preg_match_all("/{$route_url}/", $request_url, $matches)) {
+        continue;
+      } else {
+        if (is_string($route) || is_callable($route)) {
+          $controller = $route;
+        } else if (is_array($route)) {
+          $controller = $route['controller'];
+          $methods = $route['methods'];
+        }
+        break;
+      }
+    }
+
+    return array(
+      'controller' => $controller,
+      'methods' => $methods
+    ); 
   }
 
   public function handleRequest ($request = null) {
-
     // Lets make sure we're always working with a valid request
     if (!$request) {
       $request = new BelmontRequest();  
     }
 
-    // Match the requests uri to a handler
-    $route_config = $this->matchRoute($request->getUri());
-
-    $output = null;
     $status_code = 200;
+    $request_uri = $request->getUri();
+    $method      = $request->getMethod();
+    //$response = new BelmontResponse($status_code);
+
+    // Look for the route handler
+    $route_config = $this->matchRoute($request_uri);
     if (!$route_config) {
-      $output = 'Error, No router for' . $request->getUri();
-    } else if (is_callable($route_config)) {
-      $output = call_user_func($route_config, $request);
+      // $response->setStatusCode(500);
+      $response->send("Error, No router for {$request_ur}");
+      return $response;
     }
 
-    if ($output) {
-      return new BelmontResponse($output, $status_code);
+    // Check the method
+    $controller = $route_config['controller'];
+    $supported_methods = explode('|', $route_config['methods']);
+    if (!in_array($method, $supported_methods)) {
+      // error_log('unsupported method');
+      return new BelmontResponse("Invalid Method supplied for {$controller}", 405);
     }
 
-    // Lets start validating the request
-    $valid_methods = explode('|', $route_config['methods']);
-    if (in_array($request->getMethod(), $valid_methods)) {
-      echo 'found a valid method and handler for ' . $request->getMethod();
+    if (is_callable($controller)) {
+      $response = new BelmontResponse(call_user_func($controller, $request));
     } else {
-      return new BelmontResponse($output, 405);
+      $response = $this->runController($controller, $method, $request);
     }
 
-    // We've found a valid route, lets execute it
-    $response = $this->runController($route_config);
-  
     return $response;
   }
 
-  public function runController(array $controller) {
+  public function log ($content) {
+    error_log('[Belmont] ' . print_r($content));
+  }
+
+  public function runController($controller_name, $method) {
+
+    echo $method . ' Run Controller for ' . $controller_name;
+
 
     $response = new BelmontResponse();
     return $response;
-
   }
   
 }

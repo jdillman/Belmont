@@ -23,9 +23,9 @@ class BelmontRequest {
 			$this->_params = array_merge($this->_params, $post);
 		}
 
-		$this->_uri = filter_input(INPUT_SERVER, 'REQUEST_URI', FILTER_SANITIZE_ENCODED);
+		$this->_uri = filter_input(INPUT_SERVER, 'REQUEST_URI', FILTER_SANITIZE_STRIPPED);
 
-		$this->_method = filter_input(INPUT_SERVER, 'REQUEST_METHOD', FILTER_SANITIZE_ENCODED);
+		$this->_method = filter_input(INPUT_SERVER, 'REQUEST_METHOD', FILTER_SANITIZE_STRIPPED);
 		
 	}
 
