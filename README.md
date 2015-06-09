@@ -1,22 +1,22 @@
-Simple PHP framework.
+# Simple PHP framework.
 
-Easy to configure routes. Straightforward controllers and a simple Model class.
+## Routes
+Maps a url to a handler (inline function or controller)
 
-Routes
-Maps a url to a handler
-
+```php
 $routes = array(
   '/' => 'home',
   '/users/%s' => 'user',
   '/test' => array(
-    'controller' => 'test',
-    'methods' => 'POST'
+	 'controller' => 'test',
+	 'methods' => 'POST'
   ),
   '/404' => function ($request) {
-    return 'Page not found';
+	 return 'Page not found';
   }
 );
+```
 
-Controllers
+## Controllers
 Takes a request and generates a response
 
