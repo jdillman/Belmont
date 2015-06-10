@@ -1,16 +1,27 @@
 <?php
 
-require('Belmont.class.php');
+require('lib/Belmont.class.php');
 
-$belmont = new Belmont(array(
+// Configure the framework
+$config = array(
+  'tracking' => true,
+  'stream' => false,
+  'cache' => 3600
+);
+
+// Set the routes
+$routes = array(
   '/about' => 'AboutController',
   '/explore/([^/])+' => 'ProjectController',
   '/users/([0-9])+' => 'UserController',
-  '/test' => function ($request) {
-    return 'Inline Function Handler';
-  },
-  '/([^/]+)' => 'HomeController',
-));
+  '/([^/]+)' => 'HomeController'
+);
 
+// Initialize the framework
+$belmont = new Belmont($routes, $config);
+
+// Handle the request
 $response = $belmont->handleRequest();
+
+// Send the response!
 $response->send();

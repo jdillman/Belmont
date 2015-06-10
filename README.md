@@ -7,35 +7,53 @@ Includes regex router, a 1-way data binding model and template-less templates
 
 require('Belmont.class.php');
 
-$belmont = new Belmont(array(
+// Configure the framework
+$config = array(
+  'tracking' => true,
+  'stream' => false
+);
+
+// Set the routes
+$routes = array(
   '/about' => 'AboutController',
   '/explore/([^/])+' => 'ProjectController',
   '/users/([0-9])+' => 'UserController',
   '/test' => function ($request) {
     return 'Inline Function Handler';
   },
-  '/([^/]+)' => 'HomeController',
-));
+  '/([^/]+)' => 'HomeController'
+);
 
+// Initialize the framework
+$belmont = new Belmont($routes, $config);
+
+// Handle the request
 $response = $belmont->handleRequest();
+
+// Send the response!
 $response->send();
 ```
 
 ## Routes
-Maps a url to a handler (inline function, string or array)
+Maps a url to a to a controller, use {} to tokenize values
 
-Use {} to tokenize values (supports regex match)
 ```php
 
-$routes['/explore/{product}' = array(
-  'controller' => 'ProductController',
-  'methods' => 'GET'
-);
-
-$routes['GET /user/{id:[0-9]+}' = array(
+// Specify which controller and methods the route is for
+$routes['/user/{id:[0-9]+}'] = array(
   'controller' => 'UserController',
   'methods' => 'GET|POST'
 );
+
+// Or specify the controller
+$routes['/user/{id:[0-9]+}'] = 'UserController';
+
+// Or use a callback
+$routes['/user/{id:[0-9]+}'] = function ($request, $params) {
+  return 'Inline handler';
+};
+
+$belmont->addRoute($routes)
 ```
 
 ## Controllers

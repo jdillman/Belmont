@@ -1,10 +1,11 @@
 <?php
 
-require('BelmontRequest.class.php');
-require('BelmontResponse.class.php');
+require('lib/BelmontRequest.class.php');
+require('lib/BelmontResponse.class.php');
 
 class Belmont {
 
+  // TODO INI settings
   CONST DEFAULT_METHODS = 'GET|POST|HEAD|PUT|DELETE';
   CONST DEFAULT_ROUTE_MATCH = '[^/]+';
   CONST DEFAULT_CONTROLLER = 'HomeController';
@@ -49,7 +50,7 @@ class Belmont {
   public function matchRoute ($request_url) {
 
     $methods = self::DEFAULT_METHODS;
-    $controller =  self::DEFAULT_CONTROLLER;
+    $controller = self::DEFAULT_CONTROLLER;
     
     foreach ($this->_routes as $route_url => $route) {
       $route_url = str_replace('/', '\/', $route_url);
@@ -78,16 +79,14 @@ class Belmont {
       $request = new BelmontRequest();  
     }
 
-    $status_code = 200;
     $request_uri = $request->getUri();
-    $method      = $request->getMethod();
-    //$response = new BelmontResponse($status_code);
+    $method = $request->getMethod();
+    $response = new BelmontResponse();
 
     // Look for the route handler
     $route_config = $this->matchRoute($request_uri);
     if (!$route_config) {
-      // $response->setStatusCode(500);
-      $response->send("Error, No router for {$request_ur}");
+      $response->setStatusCode(400);
       return $response;
     }
 
@@ -95,14 +94,15 @@ class Belmont {
     $controller = $route_config['controller'];
     $supported_methods = explode('|', $route_config['methods']);
     if (!in_array($method, $supported_methods)) {
-      // error_log('unsupported method');
-      return new BelmontResponse("Invalid Method supplied for {$controller}", 405);
+      $response->setStatusCode(405);
+      return $response;
     }
 
+    // See if it's a callback instead of controller
     if (is_callable($controller)) {
-      $response = new BelmontResponse(call_user_func($controller, $request));
+      $response->send(call_user_func($controller, $request));
     } else {
-      $response = $this->runController($controller, $method, $request);
+      $response = $this->runController($controller, $method, $request, $response);
     }
 
     return $response;
@@ -112,12 +112,28 @@ class Belmont {
     error_log('[Belmont] ' . print_r($content));
   }
 
-  public function runController($controller_name, $method) {
+  public function runController(
+    $controller_name,
+    $method = 'GET',
+    &$request = null,
+    &$response = null
+  ) {
 
-    echo $method . ' Run Controller for ' . $controller_name;
+    // TODO validate controller_name
+    $controller_path = "\\controllers\\{$controller_name}.class.php";
+    require_once($controller_path);
 
+    // Ensure we always have a proper request and response
+    if (!$request) {
+      $request = new BelmontRequest();
+    }
+    if (!$response) {
+      $response = new BelmontResponse();
+    }
 
-    $response = new BelmontResponse();
+    $controller = new $controller_name($request, $response);
+
+    $response = $controller->run($method);
     return $response;
   }
   
