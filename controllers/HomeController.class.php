@@ -24,17 +24,4 @@ class HomeController extends BelmontHTMLController {
     ),
   );
 
-  public function beforeStart () {
-    // Modify the $_page_params or $_regions before we start the page
-  }
-
-  public function regionSchema ($region_id) {
-    switch ($region_id) {
-      case 'main':
-        break;
-    }
-  }
-
-  
-
 }

@@ -8,24 +8,97 @@ class BelmontHTMLController extends BelmontController {
   CONST JS_PATH = '/js/';
   CONST CSS_PATH = '/css/';
 
-  protected $_model = null;
+  // Page parameters (title, metatags)
+  protected $_page_params = array(
+    'title' => 'Belmont web framework',
+    'meta' => array(
+      'description' => 'Meta description'
+    )
+  );
 
+  // Regions are special sections of the page that can contain 
+  // 1 or many templates, scripts and styles grouped together
   protected $_regions = null;
 
-  protected $_page_params = null;
+  // Scripts to be included
+  protected $_scripts = null;
+
+  // Stylesheets to be included
+  protected $_styles = null;
+
+  // Have we started the page already?
+  private $_started = false;
 
   public function start ($page_params) {
-    $this->addJS('belmont.js');
-    $this->addCSS('reset.css');
-    $this->addCSS('common.css');
-    $this->_response->send('<html><head></head><body>');
+
+    $title = isset($page_params['title'])
+      ? $page_params['title']
+      : ''; // self::DEFAULT_TITLE;
+
+    $meta = array();
+    if (isset($page_params['meta'])) {
+      foreach ($page_params['meta'] as $tag => $content) {
+//<meta name="description" content="test">
+      }
+    }
+    
+    $meta = '';
+    $stylesheets = '';
+    $head_scripts = '';
+    
+    // Begin the page (TODO put markup in a .tpl file)
+    $page = <<< HTML
+<html>
+  <head>
+    <title>{$title}</title>
+    {$meta}
+    {$this->addCSS('reset.css')}
+    {$this->addCSS('common.css')}
+    {$stylesheets}
+    {$this->addJS('belmont.js')}
+    {$head_scripts}
+  </head>
+  <body>
+HTML;
+
+    $this->_response->send($page);
+    $this->_started = true;
+
+    return $this->_started;
   }
 
-  public function addJS ($script_name) {
+  public function addJS ($script_name, $defer = false, $region_id = null) {
+
+    $script_html = '<script type="text/javascript" src="' . $script_name . '"></script>';
+
+    // Do we want to include this script now or wait and do it at page end
+    $included = true;
+    if ($this->_started) {
+      if ($defer) {
+        $included = false;
+      } else {
+        $this->_response->send($script_html);
+      }
+    }
+
+    $this->_scripts[$script_name] = array(
+      'region' => $region_id || 'body',
+      'included' => $included
+    );
+
+    return $script_html;
 
   }
 
-  public function addCSS ($stylesheet_name) {
+  public function addCSS ($stylesheet_name, $region_id = null) {
+
+    $stylesheet_html = '<link type="text/css" rel="stylesheet" href="' . $stylesheet_name . '">';
+
+    /*if ($smart_load && $this->_started) {
+      $this->response->send('');
+    }*/
+
+    return $stylesheet_html;
 
   }
 
@@ -33,7 +106,7 @@ class BelmontHTMLController extends BelmontController {
     // TODO validate template_name
 
     $html = null; // TODO html tags class
-    $model = $this->_model;
+    $model = null; //$this->_model;
 
     ob_start();
     require self::TEMPLATE_PATH . $template_name;
@@ -64,7 +137,16 @@ class BelmontHTMLController extends BelmontController {
       $this->buildPage();
     } else if (!empty($this->_regions)) {
       foreach ($this->_regions as $region_id => $region) {
-        $this->addTpl($region['tpl'], $region_id);
+        if (isset($region['css'])) {
+          $this->addCSS($region['css']);
+        }
+        if (isset($region['tpl'])) {
+          $this->addTpl($region['tpl'], $region_id);  
+        }
+        if (isset($region['js'])) {
+          $this->addJS($region['js']);
+        }
+
       }
     }
     
