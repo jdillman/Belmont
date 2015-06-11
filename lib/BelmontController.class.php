@@ -8,7 +8,6 @@ class BelmontController {
 
   protected $_request = null;
   protected $_response = null;
-  protected $_model = null;
 
   public function __construct (
     BelmontRequest &$request,

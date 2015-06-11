@@ -4,34 +4,37 @@ require_once 'lib/BelmontHTMLController.class.php';
 
 class HomeController extends BelmontHTMLController {
 
-  public function handleGET () {
-    
-    $this->setModel(array(
-      'name' => '',
-      'foo' => '',
-    ));
+  protected $_page_params = array(
+    'title' => 'Home',
+    'keywords' => 'Keywords list, foo, bar',
+  );
 
-    $this->start(array(
-      'title' => 'Home',
-      'keywords' => 'Keywords list, foo, bar',
-      'css' => array(
-        'header.css',
-        'home.css'
-      ),
-      'js' => array(
-        'home.js'
+  protected $_regions = array(
+    'main' => array(
+      'tpl' => 'home.html.tpl',
+      'css' => 'main.css',
+      'js' => 'main.js',
+      'schema' => array(
+        'polling' => 30, // 30 sec refresh
       )
-    ));
+    ),
+    'sidebar' => array(
+      'tpl' => 'sidebar.html.tpl',
+      'css' => 'sidebar.css',
+    ),
+  );
 
-    $this->addTpl('home.html.tpl');
-
-    if (true /* testing something*/) {
-      //$this->bindTpl('jsbindings.html.tpl', array('name', 'foo'));
-    }
-
-    $this->end();
-    
-    return true;
+  public function beforeStart () {
+    // Modify the $_page_params or $_regions before we start the page
   }
+
+  public function regionSchema ($region_id) {
+    switch ($region_id) {
+      case 'main':
+        break;
+    }
+  }
+
+  
 
 }

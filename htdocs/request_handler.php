@@ -6,14 +6,18 @@ require('lib/Belmont.class.php');
 $config = array(
   'tracking' => true,
   'stream' => false,
-  'cache' => 3600
+  'controller_cache' => array(
+    'enabled' => true,
+    'ttl' => 3600
+  )
 );
 
 // Set the routes
 $routes = array(
-  '/about' => 'AboutController',
   '/explore/([^/])+' => 'ProjectController',
-  '/users/([0-9])+' => 'UserController',
+  '/users/([0-9])+' => function ($request) {
+    return 'Inline function handler for ' . $request->getUri();
+  },
   '/([^/]+)' => 'HomeController'
 );
 
