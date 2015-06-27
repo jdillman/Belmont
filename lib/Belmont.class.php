@@ -1,7 +1,21 @@
 <?php
 
-require('lib/BelmontRequest.class.php');
-require('lib/BelmontResponse.class.php');
+/**
+ * Belmont web framework.
+ *  
+ * Route a sanitized request to a controller to generate a response.
+ * 
+ * @see 'request_handler.php'
+ * @see 'lib/Belmont.class.php'
+ * @see 'lib/BelmontRequest.class.php'
+ * @see 'lib/BelmontResponse.class.php'
+ * @see 'lib/BelmontController.class.php'
+ * @see 'lib/BelmontHTMLController.class.php'
+ * @see 'lib/BelmontModel.class.php'
+ */
+
+require 'lib/BelmontRequest.class.php';
+require 'lib/BelmontResponse.class.php';
 
 class Belmont {
 
@@ -16,9 +30,11 @@ class Belmont {
     'stream'    => true   // Stream HTML as we generate it otherwise buffer
   );
 
+  // Current routes being handled.
+  // Set with addRoutes(array($route => $handler));
   private $routes = null;
 
-  public function __construct (array $routes, array $config = array()) {
+  public function __construct (array $routes = array(), array $config = array()) {
 
     $config = array_merge($this->_config, $config);
 
@@ -29,11 +45,13 @@ class Belmont {
       // TODO Modify links with tracking info
     }
 
-    $this->addRoute($routes);
-
+    if (!empty($routes)) {
+      $this->addRoutes($routes);  
+    }
+    
   }
 
-  public function addRoute(array $routes) {
+  public function addRoutes(array $routes) {
     foreach ($routes as $key => $route) {
       // Make sure there is always a leading '/'
       if (substr($key, 0, 1) !== '/') {
@@ -47,7 +65,7 @@ class Belmont {
   }
 
   // Takes a URL and finds the appropriate handler
-  public function matchRoute ($request_url) {
+  private function _matchRoute ($request_url) {
 
     $methods = self::DEFAULT_METHODS;
     $controller = self::DEFAULT_CONTROLLER;
@@ -84,7 +102,7 @@ class Belmont {
     $response = new BelmontResponse();
 
     // Look for the route handler
-    $route_config = $this->matchRoute($request_uri);
+    $route_config = $this->_matchRoute($request_uri);
     if (!$route_config) {
       $response->setStatusCode(400);
       return $response;
@@ -98,21 +116,21 @@ class Belmont {
       return $response;
     }
 
-    // See if it's a callback instead of controller
+    // See if the handler is a callback instead of controller
     if (is_callable($controller)) {
       $response->send(call_user_func($controller, $request));
     } else {
-      $response = $this->runController($controller, $method, $request, $response);
+      $response = $this->_runController($controller, $method, $request, $response);
     }
 
     return $response;
   }
 
   public function log ($content) {
-    error_log('[Belmont] ' . print_r($content));
+    error_log('[Belmont] ' . print_r($content, true));
   }
 
-  public function runController(
+  private function _runController(
     $controller_name,
     $method = 'GET',
     &$request = null,
@@ -131,9 +149,11 @@ class Belmont {
       $response = new BelmontResponse();
     }
 
+    // Instantiate the controller
     $controller = new $controller_name($request, $response);
 
     $response = $controller->run($method);
+
     return $response;
   }
   

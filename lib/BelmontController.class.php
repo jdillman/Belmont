@@ -1,6 +1,6 @@
 <?php
 
-require_once('lib/BelmontResponse.class.php');
+require_once 'lib/BelmontResponse.class.php';
 
 class BelmontController {
 
@@ -67,12 +67,12 @@ class BelmontController {
       return $this->_response;
     }
 
+    // Post handler checks
     if (!$this->afterHandleMethod($message)) {
       $this->_response->send($message);
     }
 
     return $this->_response;
-
   }
 
 }

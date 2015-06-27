@@ -1,6 +1,6 @@
 <?php
 
-require('lib/Belmont.class.php');
+require 'lib/Belmont.class.php';
 
 // Configure the framework
 $config = array(
