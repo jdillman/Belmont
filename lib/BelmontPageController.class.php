@@ -2,8 +2,9 @@
 
 require_once 'lib/BelmontController.class.php';
 require_once 'lib/BelmontTemplate.class.php';
+require_once 'lib/HTMLTags.class.php';
 
-class BelmontHTMLController extends BelmontController {
+class BelmontPageController extends BelmontController {
 
   CONST TEMPLATE_PATH = '/templates/';
   CONST JS_PATH       = '/js/';
@@ -51,7 +52,7 @@ class BelmontHTMLController extends BelmontController {
           $this->addCSS($region['css']);
         }
         if (isset($region['tpl'])) {
-          $this->addTpl($region['tpl'], $region_id);  
+          $this->addTpl($region['tpl'], array(), $region_id);
         }
         if (isset($region['js'])) {
           $this->addJS($region['js']);
@@ -88,7 +89,7 @@ class BelmontHTMLController extends BelmontController {
     }
 
     // Start the page!!
-    $page = $this->addTpl('page_start', array(
+    $page = $this->addTpl('page/page_start', array(
       'css' => $this->_getCSSIncludes(),
       'js' => $this->_getJSIncludes(),
       'title' => $title,
@@ -131,6 +132,7 @@ class BelmontHTMLController extends BelmontController {
         array_push($ret, self::CSS_PATH . $stylesheet);
       }
     }
+
     return $ret;
   }
 
@@ -139,9 +141,10 @@ class BelmontHTMLController extends BelmontController {
     foreach ($this->_scripts as $script => $script_data) {
       if (!$script_data['included']) {
         $this->_scripts[$script]['included'] = true;
-        array_push($ret, array(self::JS_PATH . $script => $script_data['region_id']));
+        $ret[self::JS_PATH . $script] = $script_data['region_id'];
       }
     }
+
     return $ret;
   }
 
@@ -168,7 +171,7 @@ class BelmontHTMLController extends BelmontController {
 
     $loaded = false;
     if ($this->_started) {
-      // not recommended but possible
+      // If the page has already been loaded lets just load the CSS now
       $loaded = true;
     }
 
@@ -186,6 +189,7 @@ class BelmontHTMLController extends BelmontController {
     // TODO validate template
 
     $tpl = new BelmontTemplate($data);
+    $tags = new HTMLTags();
 
     ob_start();
     require self::TEMPLATE_PATH . $template . '.html.tpl';
@@ -195,7 +199,7 @@ class BelmontHTMLController extends BelmontController {
     // Wrap this template in a region div
     if ($region_id) {
       // Check schema to create conf settings
-      $ret = div($ret, array(
+      $ret = $tags->div($ret, array(
         'data-region' => $region_id
       ));
     }

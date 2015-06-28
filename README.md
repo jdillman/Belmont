@@ -64,9 +64,9 @@ Takes a request and generates a response.
 ```php
 <?php
 
-require_once 'lib/BelmontHTMLController.class.php';
+require_once 'lib/BelmontPageController.class.php';
 
-class HomeController extends BelmontHTMLController {
+class HomeController extends BelmontPageController {
 
   protected $_page_params = array(
     'title' => 'Home',

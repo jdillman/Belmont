@@ -1,7 +1,5 @@
 <?php
 
-require_once 'lib/HTMLfunctions.inc.php';
-
 $title = $tpl->get('title');
 $meta = $tpl->get('meta');
 $js = $tpl->get('js');
@@ -14,12 +12,22 @@ foreach ($meta as $name => $content) {
 
 $scripts = '';
 foreach ($js as $script => $props) {
-  $scripts .= '<script></script>';
+  $attrs = array(
+    'src' => $script,
+    'type' => 'text/javascript'
+  );
+  if (!empty($props['region_id'])) {
+    $attrs['data-region'] = $props['region_id'];
+  }
+  $scripts .= $tags->script('', $attrs);
 }
 
 $stylesheets = '';
-foreach ($css as $styesheet) {
-  $stylesheets .= '<link></link>';
+foreach ($css as $stylesheet) {
+  $stylesheets .= $tags->link('', array(
+    'rel' => 'stylesheet',
+    'href' => $stylesheet
+  ));
 }
 
 echo <<< HTML

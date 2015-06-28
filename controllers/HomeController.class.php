@@ -1,8 +1,8 @@
 <?php
 
-require_once 'lib/BelmontHTMLController.class.php';
+require_once 'lib/BelmontPageController.class.php';
 
-class HomeController extends BelmontHTMLController {
+class HomeController extends BelmontPageController {
 
   protected $_page_params = array(
     'title' => 'Home',
@@ -13,7 +13,6 @@ class HomeController extends BelmontHTMLController {
     'main' => array(
       'tpl' => 'home',
       'css' => 'main.css',
-      'js' => 'main.js',
       'events' => array(
         'sidebar::select' => 'refresh'
       )
