@@ -80,7 +80,6 @@
  
   function publish (message) {
     if (!subscriptions[message]) {
-      // R.log("No listener for "" + message);
       return false;
     }
  
@@ -110,7 +109,6 @@
     }
  
     if (typeof cb !== "undefined") {
-      R.log(" Unsubscribing all listeners for" + message);
       subscriptions[message] = [];
       return true;
     }
